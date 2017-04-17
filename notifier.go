@@ -14,8 +14,8 @@ type MergeRequestMessageOptions struct {
 	ProjectName    string
 }
 
-func Notifier(client *gitlabAPI.Client, baseURL string, notify <-chan MergeRequestMessageOptions) {
-	for m := range notify {
+func Notifier(client *gitlabAPI.Client, baseURL string, messages <-chan MergeRequestMessageOptions) {
+	for m := range messages {
 		body := fmt.Sprintf("You can find the documentation here: %s%s", baseURL, m.PermalinkPath)
 		o := &gitlabAPI.CreateMergeRequestNoteOptions{
 			Body: &body,

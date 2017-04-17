@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"path"
@@ -21,15 +22,15 @@ type MergeRequest struct {
 	ID int
 }
 
-func DocumentGenerator(dest string, in <-chan DocumentationRequest, out chan<- MergeRequestMessageOptions) {
-	for q := range in {
-		err, message := generate(dest, q)
+func DocumentGenerator(dest string, in <-chan DocumentationRequest, messages chan<- MergeRequestMessageOptions) {
+	for query := range in {
+		err, message := generate(dest, query)
 		if err != nil {
-			panic(err)
+			log.Printf("Error during generation for %+v, %s\n", query, err)
 		}
 
 		if message != nil {
-			out <- *message
+			messages <- *message
 		}
 	}
 }
