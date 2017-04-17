@@ -1,0 +1,14 @@
+hash: 914f29ef5f76362f82bf0c2a8bab175cd30fc3249f7bc65060db74318339e79c
+updated: 2017-04-17T17:44:27.809669363+02:00
+imports:
+- name: github.com/google/go-querystring
+  version: 53e6ce116135b80d037921a7fdd5138cf32d7a8a
+  subpackages:
+  - query
+- name: github.com/xanzy/go-gitlab
+  version: 5b756e2fdc9f21fd4791fa1453b8fe01af0f82e2
+- name: gopkg.in/go-playground/webhooks.v2
+  version: fe7552fcf473b3e7fe42f0c5f37d7ed6db175f08
+  subpackages:
+  - gitlab
+testImports: []

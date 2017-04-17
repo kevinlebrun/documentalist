@@ -1,0 +1,6 @@
+package: github.com/kevinlebrun/documentalist
+import:
+- package: gopkg.in/go-playground/webhooks.v2
+  version: ^2.1.0
+- package: github.com/xanzy/go-gitlab
+  version: ^0.5.1
