@@ -10,12 +10,14 @@ func HandlePush(in chan<- DocumentationRequest) func(interface{}, webhooks.Heade
 		pl := payload.(gitlab.PushEventPayload)
 
 		req := DocumentationRequest{
-			Repository:   pl.Repository.URL,
-			ProjectName:  pl.Project.Name,
-			ProjectID:    pl.ProjectID,
-			Hash:         pl.After,
-			Ref:          pl.Ref,
-			MergeRequest: nil,
+			EventName:     EventPush,
+			Repository:    pl.Repository.URL,
+			ProjectName:   pl.Project.Name,
+			ProjectID:     pl.ProjectID,
+			Hash:          pl.After,
+			Ref:           pl.Ref,
+			DefaultBranch: pl.Project.DefaultBranch,
+			MergeRequest:  nil,
 		}
 
 		in <- req
@@ -27,11 +29,13 @@ func HandleMergeRequest(in chan<- DocumentationRequest) func(interface{}, webhoo
 		pl := payload.(gitlab.MergeRequestEventPayload)
 
 		req := DocumentationRequest{
-			Repository:  pl.ObjectAttributes.Source.GitSSHURL,
-			ProjectName: pl.ObjectAttributes.Source.Name,
-			ProjectID:   pl.ObjectAttributes.TargetProjectID,
-			Hash:        pl.ObjectAttributes.LastCommit.ID,
-			Ref:         pl.ObjectAttributes.SourceBranch,
+			EventName:     EventMergeRequest,
+			Repository:    pl.ObjectAttributes.Source.GitSSHURL,
+			ProjectName:   pl.ObjectAttributes.Source.Name,
+			ProjectID:     pl.ObjectAttributes.TargetProjectID,
+			Hash:          pl.ObjectAttributes.LastCommit.ID,
+			Ref:           pl.ObjectAttributes.SourceBranch,
+			DefaultBranch: pl.ObjectAttributes.Source.DefaultBranch,
 			MergeRequest: &MergeRequest{
 				ID: pl.ObjectAttributes.ID,
 			},

@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -9,17 +11,34 @@ import (
 	"strconv"
 )
 
+const (
+	EventPush         = "Push"
+	EventMergeRequest = "MergeRequest"
+)
+
 type DocumentationRequest struct {
-	Repository   string
-	ProjectName  string
-	ProjectID    int
-	Hash         string
-	Ref          string
-	MergeRequest *MergeRequest
+	EventName     string
+	Repository    string
+	ProjectName   string
+	ProjectID     int
+	Hash          string
+	Ref           string
+	DefaultBranch string
+	MergeRequest  *MergeRequest
+}
+
+func (req DocumentationRequest) IsDefaultBranch() bool {
+	return req.Ref != "refs/heads/"+req.DefaultBranch
 }
 
 type MergeRequest struct {
 	ID int
+}
+
+type ProjectOptions struct {
+	Command []string `json:"command"`
+	Path    string   `json:"path"`
+	Notify  bool     `json:"notify"`
 }
 
 func DocumentGenerator(dest string, in <-chan DocumentationRequest, messages chan<- MergeRequestMessageOptions) {
@@ -36,17 +55,26 @@ func DocumentGenerator(dest string, in <-chan DocumentationRequest, messages cha
 }
 
 func generate(dest string, q DocumentationRequest) (error, *MergeRequestMessageOptions) {
+	if q.EventName == EventPush && q.IsDefaultBranch() {
+		return nil, nil
+	}
+
 	revDir := path.Join(dest, q.ProjectName, q.Hash)
 
+	err, dir := prepare(q.Repository, q.ProjectName, q.Hash)
+	if err != nil {
+		return err, nil
+	}
+
+	defer os.RemoveAll(dir)
+
+	options, err := parseProjectOptions(dir)
+	if err != nil {
+		return err, nil
+	}
+
 	if _, err := os.Stat(revDir); os.IsNotExist(err) {
-		err, dir := prepare(q.Repository, q.ProjectName, q.Hash)
-		if err != nil {
-			return err, nil
-		}
-
-		defer os.RemoveAll(dir)
-
-		err = makeDoc(dir)
+		err = makeDoc(options.Command, dir)
 		if err != nil {
 			return err, nil
 		}
@@ -56,15 +84,14 @@ func generate(dest string, q DocumentationRequest) (error, *MergeRequestMessageO
 			return err, nil
 		}
 
-		// TODO get from .documentalist.yml
-		err = os.Rename(path.Join(dir, "build", "doc"), revDir)
+		err = os.Rename(path.Join(dir, options.Path), revDir)
 		if err != nil {
 			return err, nil
 		}
 	}
 
-	if q.Ref == "refs/heads/master" {
-		masterLink := path.Join(dest, q.ProjectName, "master")
+	if q.IsDefaultBranch() {
+		masterLink := path.Join(dest, q.ProjectName, q.DefaultBranch)
 		os.Remove(masterLink)
 		os.Symlink(revDir, masterLink)
 	}
@@ -78,7 +105,7 @@ func generate(dest string, q DocumentationRequest) (error, *MergeRequestMessageO
 		MRLink := path.Join(dest, q.ProjectName, "merge_requests", strconv.Itoa(q.MergeRequest.ID))
 
 		var message *MergeRequestMessageOptions
-		if _, err := os.Stat(MRLink); os.IsNotExist(err) {
+		if _, err := os.Stat(MRLink); os.IsNotExist(err) && options.Notify {
 			message = &MergeRequestMessageOptions{
 				ProjectID:      q.ProjectID,
 				ProjectName:    q.ProjectName,
@@ -114,6 +141,31 @@ func prepare(repository, projectName, hash string) (error, string) {
 	return nil, dir
 }
 
+func parseProjectOptions(dir string) (*ProjectOptions, error) {
+	if _, err := os.Stat(path.Join(dir, ".documentalist.json")); err == nil {
+		var o ProjectOptions
+
+		data, err := ioutil.ReadFile(path.Join(dir, ".documentalist.json"))
+		if err != nil {
+			return nil, err
+		}
+
+		err = json.Unmarshal(data, &o)
+		if err != nil {
+			return nil, err
+		}
+
+		return &o, nil
+	}
+
+	// XXX retro compatibility
+	return &ProjectOptions{
+		Command: []string{"make", "build_doc"},
+		Path:    "build/doc",
+		Notify:  true,
+	}, nil
+}
+
 func clone(repository, dir string) error {
 	cmd := exec.Command("git", "clone", repository, dir)
 	cmd.Stdout = os.Stdout
@@ -128,9 +180,9 @@ func checkout(hash, dir string) error {
 	return cmd.Run()
 }
 
-func makeDoc(dir string) error {
-	// TODO get from .documentalist.yml
-	cmd := exec.Command("make", "build_doc", "-C", dir)
+func makeDoc(command []string, dir string) error {
+	cmd := exec.Command(command[0], command[1:]...)
+	cmd.Dir = dir
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()

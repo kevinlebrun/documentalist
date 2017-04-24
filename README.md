@@ -1,8 +1,16 @@
 # Documentalist
 
-I use this little server to generate and serve the documentation of my projects.
+I use this little bot to generate and serve the documentation of my projects.
 
-I plan to use a `.documentalist.yml` in the project directory to handle specific use cases.
+The bot need a configuration file at the project root named `.documentalist.json` with the following content:
+
+```json
+{
+    "command": ["make", "doc"],
+    "path": "build/doc",
+    "notify": true
+}
+```
 
 ## Usage
 
