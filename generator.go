@@ -28,7 +28,7 @@ type DocumentationRequest struct {
 }
 
 func (req DocumentationRequest) IsDefaultBranch() bool {
-	return req.Ref != "refs/heads/"+req.DefaultBranch
+	return req.Ref == "refs/heads/"+req.DefaultBranch
 }
 
 type MergeRequest struct {
@@ -55,13 +55,15 @@ func DocumentGenerator(dest string, in <-chan DocumentationRequest, messages cha
 }
 
 func generate(dest string, q DocumentationRequest) (error, *MergeRequestMessageOptions) {
-	if q.EventName == EventPush && q.IsDefaultBranch() {
+	// FIXME doc is generated for master when
+	// TODO
+	if q.EventName == EventPush && !q.IsDefaultBranch() {
 		return nil, nil
 	}
 
-	revDir := path.Join(dest, q.ProjectName, q.Hash)
+	revDir := path.Join(dest, strconv.Itoa(q.ProjectID), q.Hash)
 
-	err, dir := prepare(q.Repository, q.ProjectName, q.Hash)
+	err, dir := prepare(q.Repository, strconv.Itoa(q.ProjectID), q.Hash)
 	if err != nil {
 		return err, nil
 	}
@@ -79,7 +81,7 @@ func generate(dest string, q DocumentationRequest) (error, *MergeRequestMessageO
 			return err, nil
 		}
 
-		err = os.MkdirAll(path.Join(dest, q.ProjectName), 0755)
+		err = os.MkdirAll(path.Join(dest, strconv.Itoa(q.ProjectID)), 0755)
 		if err != nil {
 			return err, nil
 		}
@@ -91,18 +93,22 @@ func generate(dest string, q DocumentationRequest) (error, *MergeRequestMessageO
 	}
 
 	if q.IsDefaultBranch() {
-		masterLink := path.Join(dest, q.ProjectName, q.DefaultBranch)
+		err = os.MkdirAll(path.Join(dest, strconv.Itoa(q.ProjectID), "refs"), 0755)
+		if err != nil {
+			return err, nil
+		}
+		masterLink := path.Join(dest, strconv.Itoa(q.ProjectID), "refs", q.DefaultBranch)
 		os.Remove(masterLink)
 		os.Symlink(revDir, masterLink)
 	}
 
 	if q.MergeRequest != nil {
-		err := os.MkdirAll(path.Join(dest, q.ProjectName, "merge_requests"), 0755)
+		err := os.MkdirAll(path.Join(dest, strconv.Itoa(q.ProjectID), "merge_requests"), 0755)
 		if err != nil {
 			return err, nil
 		}
 
-		MRLink := path.Join(dest, q.ProjectName, "merge_requests", strconv.Itoa(q.MergeRequest.ID))
+		MRLink := path.Join(dest, strconv.Itoa(q.ProjectID), "merge_requests", strconv.Itoa(q.MergeRequest.ID))
 
 		var message *MergeRequestMessageOptions
 		if _, err := os.Stat(MRLink); os.IsNotExist(err) && options.Notify {
@@ -110,7 +116,7 @@ func generate(dest string, q DocumentationRequest) (error, *MergeRequestMessageO
 				ProjectID:      q.ProjectID,
 				ProjectName:    q.ProjectName,
 				MergeRequestID: q.MergeRequest.ID,
-				PermalinkPath:  fmt.Sprintf("/%s/merge_requests/%s/", q.ProjectName, strconv.Itoa(q.MergeRequest.ID)),
+				PermalinkPath:  fmt.Sprintf("/%s/merge_requests/%s/", q.ProjectID, strconv.Itoa(q.MergeRequest.ID)),
 			}
 		}
 
@@ -158,6 +164,7 @@ func parseProjectOptions(dir string) (*ProjectOptions, error) {
 		return &o, nil
 	}
 
+	// FIXME remove
 	// XXX retro compatibility
 	return &ProjectOptions{
 		Command: []string{"make", "build_doc"},

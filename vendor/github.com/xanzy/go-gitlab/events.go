@@ -1,5 +1,5 @@
 //
-// Copyright 2015, Sander van Harmelen
+// Copyright 2017, Sander van Harmelen
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,20 +34,20 @@ type PushEvent struct {
 	UserAvatar  string `json:"user_avatar"`
 	ProjectID   int    `json:"project_id"`
 	Project     struct {
-		Name              string               `json:"name"`
-		Description       string               `json:"description"`
-		AvatarURL         string               `json:"avatar_url"`
-		GitSSHURL         string               `json:"git_ssh_url"`
-		GitHTTPURL        string               `json:"git_http_url"`
-		Namespace         string               `json:"namespace"`
-		PathWithNamespace string               `json:"path_with_namespace"`
-		DefaultBranch     string               `json:"default_branch"`
-		Homepage          string               `json:"homepage"`
-		URL               string               `json:"url"`
-		SSHURL            string               `json:"ssh_url"`
-		HTTPURL           string               `json:"http_url"`
-		WebURL            string               `json:"web_url"`
-		VisibilityLevel   VisibilityLevelValue `json:"visibility_level"`
+		Name              string          `json:"name"`
+		Description       string          `json:"description"`
+		AvatarURL         string          `json:"avatar_url"`
+		GitSSHURL         string          `json:"git_ssh_url"`
+		GitHTTPURL        string          `json:"git_http_url"`
+		Namespace         string          `json:"namespace"`
+		PathWithNamespace string          `json:"path_with_namespace"`
+		DefaultBranch     string          `json:"default_branch"`
+		Homepage          string          `json:"homepage"`
+		URL               string          `json:"url"`
+		SSHURL            string          `json:"ssh_url"`
+		HTTPURL           string          `json:"http_url"`
+		WebURL            string          `json:"web_url"`
+		Visibility        VisibilityValue `json:"visibility"`
 	} `json:"project"`
 	Repository        *Repository `json:"repository"`
 	Commits           []*Commit   `json:"commits"`
@@ -69,20 +69,20 @@ type TagEvent struct {
 	UserAvatar  string `json:"user_avatar"`
 	ProjectID   int    `json:"project_id"`
 	Project     struct {
-		Name              string               `json:"name"`
-		Description       string               `json:"description"`
-		AvatarURL         string               `json:"avatar_url"`
-		GitSSHURL         string               `json:"git_ssh_url"`
-		GitHTTPURL        string               `json:"git_http_url"`
-		Namespace         string               `json:"namespace"`
-		PathWithNamespace string               `json:"path_with_namespace"`
-		DefaultBranch     string               `json:"default_branch"`
-		Homepage          string               `json:"homepage"`
-		URL               string               `json:"url"`
-		SSHURL            string               `json:"ssh_url"`
-		HTTPURL           string               `json:"http_url"`
-		WebURL            string               `json:"web_url"`
-		VisibilityLevel   VisibilityLevelValue `json:"visibility_level"`
+		Name              string          `json:"name"`
+		Description       string          `json:"description"`
+		AvatarURL         string          `json:"avatar_url"`
+		GitSSHURL         string          `json:"git_ssh_url"`
+		GitHTTPURL        string          `json:"git_http_url"`
+		Namespace         string          `json:"namespace"`
+		PathWithNamespace string          `json:"path_with_namespace"`
+		DefaultBranch     string          `json:"default_branch"`
+		Homepage          string          `json:"homepage"`
+		URL               string          `json:"url"`
+		SSHURL            string          `json:"ssh_url"`
+		HTTPURL           string          `json:"http_url"`
+		WebURL            string          `json:"web_url"`
+		Visibility        VisibilityValue `json:"visibility"`
 	} `json:"project"`
 	Repository        *Repository `json:"repository"`
 	Commits           []*Commit   `json:"commits"`
@@ -97,20 +97,20 @@ type IssueEvent struct {
 	ObjectKind string `json:"object_kind"`
 	User       *User  `json:"user"`
 	Project    struct {
-		Name              string               `json:"name"`
-		Description       string               `json:"description"`
-		AvatarURL         string               `json:"avatar_url"`
-		GitSSHURL         string               `json:"git_ssh_url"`
-		GitHTTPURL        string               `json:"git_http_url"`
-		Namespace         string               `json:"namespace"`
-		PathWithNamespace string               `json:"path_with_namespace"`
-		DefaultBranch     string               `json:"default_branch"`
-		Homepage          string               `json:"homepage"`
-		URL               string               `json:"url"`
-		SSHURL            string               `json:"ssh_url"`
-		HTTPURL           string               `json:"http_url"`
-		WebURL            string               `json:"web_url"`
-		VisibilityLevel   VisibilityLevelValue `json:"visibility_level"`
+		Name              string          `json:"name"`
+		Description       string          `json:"description"`
+		AvatarURL         string          `json:"avatar_url"`
+		GitSSHURL         string          `json:"git_ssh_url"`
+		GitHTTPURL        string          `json:"git_http_url"`
+		Namespace         string          `json:"namespace"`
+		PathWithNamespace string          `json:"path_with_namespace"`
+		DefaultBranch     string          `json:"default_branch"`
+		Homepage          string          `json:"homepage"`
+		URL               string          `json:"url"`
+		SSHURL            string          `json:"ssh_url"`
+		HTTPURL           string          `json:"http_url"`
+		WebURL            string          `json:"web_url"`
+		Visibility        VisibilityValue `json:"visibility"`
 	} `json:"project"`
 	Repository       *Repository `json:"repository"`
 	ObjectAttributes struct {
@@ -146,20 +146,20 @@ type CommitCommentEvent struct {
 	User       *User  `json:"user"`
 	ProjectID  int    `json:"project_id"`
 	Project    struct {
-		Name              string               `json:"name"`
-		Description       string               `json:"description"`
-		AvatarURL         string               `json:"avatar_url"`
-		GitSSHURL         string               `json:"git_ssh_url"`
-		GitHTTPURL        string               `json:"git_http_url"`
-		Namespace         string               `json:"namespace"`
-		PathWithNamespace string               `json:"path_with_namespace"`
-		DefaultBranch     string               `json:"default_branch"`
-		Homepage          string               `json:"homepage"`
-		URL               string               `json:"url"`
-		SSHURL            string               `json:"ssh_url"`
-		HTTPURL           string               `json:"http_url"`
-		WebURL            string               `json:"web_url"`
-		VisibilityLevel   VisibilityLevelValue `json:"visibility_level"`
+		Name              string          `json:"name"`
+		Description       string          `json:"description"`
+		AvatarURL         string          `json:"avatar_url"`
+		GitSSHURL         string          `json:"git_ssh_url"`
+		GitHTTPURL        string          `json:"git_http_url"`
+		Namespace         string          `json:"namespace"`
+		PathWithNamespace string          `json:"path_with_namespace"`
+		DefaultBranch     string          `json:"default_branch"`
+		Homepage          string          `json:"homepage"`
+		URL               string          `json:"url"`
+		SSHURL            string          `json:"ssh_url"`
+		HTTPURL           string          `json:"http_url"`
+		WebURL            string          `json:"web_url"`
+		Visibility        VisibilityValue `json:"visibility"`
 	} `json:"project"`
 	Repository       *Repository `json:"repository"`
 	ObjectAttributes struct {
@@ -198,20 +198,20 @@ type MergeCommentEvent struct {
 	User       *User  `json:"user"`
 	ProjectID  int    `json:"project_id"`
 	Project    struct {
-		Name              string               `json:"name"`
-		Description       string               `json:"description"`
-		AvatarURL         string               `json:"avatar_url"`
-		GitSSHURL         string               `json:"git_ssh_url"`
-		GitHTTPURL        string               `json:"git_http_url"`
-		Namespace         string               `json:"namespace"`
-		PathWithNamespace string               `json:"path_with_namespace"`
-		DefaultBranch     string               `json:"default_branch"`
-		Homepage          string               `json:"homepage"`
-		URL               string               `json:"url"`
-		SSHURL            string               `json:"ssh_url"`
-		HTTPURL           string               `json:"http_url"`
-		WebURL            string               `json:"web_url"`
-		VisibilityLevel   VisibilityLevelValue `json:"visibility_level"`
+		Name              string          `json:"name"`
+		Description       string          `json:"description"`
+		AvatarURL         string          `json:"avatar_url"`
+		GitSSHURL         string          `json:"git_ssh_url"`
+		GitHTTPURL        string          `json:"git_http_url"`
+		Namespace         string          `json:"namespace"`
+		PathWithNamespace string          `json:"path_with_namespace"`
+		DefaultBranch     string          `json:"default_branch"`
+		Homepage          string          `json:"homepage"`
+		URL               string          `json:"url"`
+		SSHURL            string          `json:"ssh_url"`
+		HTTPURL           string          `json:"http_url"`
+		WebURL            string          `json:"web_url"`
+		Visibility        VisibilityValue `json:"visibility"`
 	} `json:"project"`
 	Repository       *Repository `json:"repository"`
 	ObjectAttributes struct {
@@ -242,20 +242,20 @@ type IssueCommentEvent struct {
 	User       *User  `json:"user"`
 	ProjectID  int    `json:"project_id"`
 	Project    struct {
-		Name              string               `json:"name"`
-		Description       string               `json:"description"`
-		AvatarURL         string               `json:"avatar_url"`
-		GitSSHURL         string               `json:"git_ssh_url"`
-		GitHTTPURL        string               `json:"git_http_url"`
-		Namespace         string               `json:"namespace"`
-		PathWithNamespace string               `json:"path_with_namespace"`
-		DefaultBranch     string               `json:"default_branch"`
-		Homepage          string               `json:"homepage"`
-		URL               string               `json:"url"`
-		SSHURL            string               `json:"ssh_url"`
-		HTTPURL           string               `json:"http_url"`
-		WebURL            string               `json:"web_url"`
-		VisibilityLevel   VisibilityLevelValue `json:"visibility_level"`
+		Name              string          `json:"name"`
+		Description       string          `json:"description"`
+		AvatarURL         string          `json:"avatar_url"`
+		GitSSHURL         string          `json:"git_ssh_url"`
+		GitHTTPURL        string          `json:"git_http_url"`
+		Namespace         string          `json:"namespace"`
+		PathWithNamespace string          `json:"path_with_namespace"`
+		DefaultBranch     string          `json:"default_branch"`
+		Homepage          string          `json:"homepage"`
+		URL               string          `json:"url"`
+		SSHURL            string          `json:"ssh_url"`
+		HTTPURL           string          `json:"http_url"`
+		WebURL            string          `json:"web_url"`
+		Visibility        VisibilityValue `json:"visibility"`
 	} `json:"project"`
 	Repository       *Repository `json:"repository"`
 	ObjectAttributes struct {
@@ -286,20 +286,20 @@ type SnippetCommentEvent struct {
 	User       *User  `json:"user"`
 	ProjectID  int    `json:"project_id"`
 	Project    struct {
-		Name              string               `json:"name"`
-		Description       string               `json:"description"`
-		AvatarURL         string               `json:"avatar_url"`
-		GitSSHURL         string               `json:"git_ssh_url"`
-		GitHTTPURL        string               `json:"git_http_url"`
-		Namespace         string               `json:"namespace"`
-		PathWithNamespace string               `json:"path_with_namespace"`
-		DefaultBranch     string               `json:"default_branch"`
-		Homepage          string               `json:"homepage"`
-		URL               string               `json:"url"`
-		SSHURL            string               `json:"ssh_url"`
-		HTTPURL           string               `json:"http_url"`
-		WebURL            string               `json:"web_url"`
-		VisibilityLevel   VisibilityLevelValue `json:"visibility_level"`
+		Name              string          `json:"name"`
+		Description       string          `json:"description"`
+		AvatarURL         string          `json:"avatar_url"`
+		GitSSHURL         string          `json:"git_ssh_url"`
+		GitHTTPURL        string          `json:"git_http_url"`
+		Namespace         string          `json:"namespace"`
+		PathWithNamespace string          `json:"path_with_namespace"`
+		DefaultBranch     string          `json:"default_branch"`
+		Homepage          string          `json:"homepage"`
+		URL               string          `json:"url"`
+		SSHURL            string          `json:"ssh_url"`
+		HTTPURL           string          `json:"http_url"`
+		WebURL            string          `json:"web_url"`
+		Visibility        VisibilityValue `json:"visibility"`
 	} `json:"project"`
 	Repository       *Repository `json:"repository"`
 	ObjectAttributes struct {
@@ -329,20 +329,20 @@ type MergeEvent struct {
 	ObjectKind string `json:"object_kind"`
 	User       *User  `json:"user"`
 	Project    struct {
-		Name              string               `json:"name"`
-		Description       string               `json:"description"`
-		AvatarURL         string               `json:"avatar_url"`
-		GitSSHURL         string               `json:"git_ssh_url"`
-		GitHTTPURL        string               `json:"git_http_url"`
-		Namespace         string               `json:"namespace"`
-		PathWithNamespace string               `json:"path_with_namespace"`
-		DefaultBranch     string               `json:"default_branch"`
-		Homepage          string               `json:"homepage"`
-		URL               string               `json:"url"`
-		SSHURL            string               `json:"ssh_url"`
-		HTTPURL           string               `json:"http_url"`
-		WebURL            string               `json:"web_url"`
-		VisibilityLevel   VisibilityLevelValue `json:"visibility_level"`
+		Name              string          `json:"name"`
+		Description       string          `json:"description"`
+		AvatarURL         string          `json:"avatar_url"`
+		GitSSHURL         string          `json:"git_ssh_url"`
+		GitHTTPURL        string          `json:"git_http_url"`
+		Namespace         string          `json:"namespace"`
+		PathWithNamespace string          `json:"path_with_namespace"`
+		DefaultBranch     string          `json:"default_branch"`
+		Homepage          string          `json:"homepage"`
+		URL               string          `json:"url"`
+		SSHURL            string          `json:"ssh_url"`
+		HTTPURL           string          `json:"http_url"`
+		WebURL            string          `json:"web_url"`
+		Visibility        VisibilityValue `json:"visibility"`
 	} `json:"project"`
 	ObjectAttributes struct {
 		ID              int       `json:"id"`
@@ -412,20 +412,20 @@ type WikiPageEvent struct {
 	ObjectKind string `json:"object_kind"`
 	User       *User  `json:"user"`
 	Project    struct {
-		Name              string               `json:"name"`
-		Description       string               `json:"description"`
-		AvatarURL         string               `json:"avatar_url"`
-		GitSSHURL         string               `json:"git_ssh_url"`
-		GitHTTPURL        string               `json:"git_http_url"`
-		Namespace         string               `json:"namespace"`
-		PathWithNamespace string               `json:"path_with_namespace"`
-		DefaultBranch     string               `json:"default_branch"`
-		Homepage          string               `json:"homepage"`
-		URL               string               `json:"url"`
-		SSHURL            string               `json:"ssh_url"`
-		HTTPURL           string               `json:"http_url"`
-		WebURL            string               `json:"web_url"`
-		VisibilityLevel   VisibilityLevelValue `json:"visibility_level"`
+		Name              string          `json:"name"`
+		Description       string          `json:"description"`
+		AvatarURL         string          `json:"avatar_url"`
+		GitSSHURL         string          `json:"git_ssh_url"`
+		GitHTTPURL        string          `json:"git_http_url"`
+		Namespace         string          `json:"namespace"`
+		PathWithNamespace string          `json:"path_with_namespace"`
+		DefaultBranch     string          `json:"default_branch"`
+		Homepage          string          `json:"homepage"`
+		URL               string          `json:"url"`
+		SSHURL            string          `json:"ssh_url"`
+		HTTPURL           string          `json:"http_url"`
+		WebURL            string          `json:"web_url"`
+		Visibility        VisibilityValue `json:"visibility"`
 	} `json:"project"`
 	Wiki struct {
 		WebURL            string `json:"web_url"`
@@ -469,20 +469,20 @@ type PipelineEvent struct {
 		AvatarURL string `json:"avatar_url"`
 	} `json:"user"`
 	Project struct {
-		Name              string               `json:"name"`
-		Description       string               `json:"description"`
-		AvatarURL         string               `json:"avatar_url"`
-		GitSSHURL         string               `json:"git_ssh_url"`
-		GitHTTPURL        string               `json:"git_http_url"`
-		Namespace         string               `json:"namespace"`
-		PathWithNamespace string               `json:"path_with_namespace"`
-		DefaultBranch     string               `json:"default_branch"`
-		Homepage          string               `json:"homepage"`
-		URL               string               `json:"url"`
-		SSHURL            string               `json:"ssh_url"`
-		HTTPURL           string               `json:"http_url"`
-		WebURL            string               `json:"web_url"`
-		VisibilityLevel   VisibilityLevelValue `json:"visibility_level"`
+		Name              string          `json:"name"`
+		Description       string          `json:"description"`
+		AvatarURL         string          `json:"avatar_url"`
+		GitSSHURL         string          `json:"git_ssh_url"`
+		GitHTTPURL        string          `json:"git_http_url"`
+		Namespace         string          `json:"namespace"`
+		PathWithNamespace string          `json:"path_with_namespace"`
+		DefaultBranch     string          `json:"default_branch"`
+		Homepage          string          `json:"homepage"`
+		URL               string          `json:"url"`
+		SSHURL            string          `json:"ssh_url"`
+		HTTPURL           string          `json:"http_url"`
+		WebURL            string          `json:"web_url"`
+		Visibility        VisibilityValue `json:"visibility"`
 	} `json:"project"`
 	Commit struct {
 		ID        string    `json:"id"`
@@ -509,10 +509,15 @@ type PipelineEvent struct {
 			Username  string `json:"username"`
 			AvatarURL string `json:"avatar_url"`
 		} `json:"user"`
-		Runner        string `json:"runner"`
+		Runner struct {
+			ID          int    `json:"id"`
+			Description string `json:"description"`
+			Active      bool   `json:"active"`
+			IsShared    bool   `json:"is_shared"`
+		} `json:"runner"`
 		ArtifactsFile struct {
 			Filename string `json:"filename"`
-			Size     string `json:"size"`
+			Size     int    `json:"size"`
 		} `json:"artifacts_file"`
 	} `json:"builds"`
 }
@@ -522,21 +527,21 @@ type PipelineEvent struct {
 // GitLab API docs:
 // https://docs.gitlab.com/ce/web_hooks/web_hooks.html#build-events
 type BuildEvent struct {
-	ObjectKind        string `json:"object_kind"`
-	Ref               string `json:"ref"`
-	Tag               bool   `json:"tag"`
-	BeforeSha         string `json:"before_sha"`
-	Sha               string `json:"sha"`
-	BuildID           int    `json:"build_id"`
-	BuildName         string `json:"build_name"`
-	BuildStage        string `json:"build_stage"`
-	BuildStatus       string `json:"build_status"`
-	BuildStartedAt    string `json:"build_started_at"`
-	BuildFinishedAt   string `json:"build_finished_at"`
-	BuildDuration     string `json:"build_duration"`
-	BuildAllowFailure bool   `json:"build_allow_failure"`
-	ProjectID         int    `json:"project_id"`
-	ProjectName       string `json:"project_name"`
+	ObjectKind        string  `json:"object_kind"`
+	Ref               string  `json:"ref"`
+	Tag               bool    `json:"tag"`
+	BeforeSha         string  `json:"before_sha"`
+	Sha               string  `json:"sha"`
+	BuildID           int     `json:"build_id"`
+	BuildName         string  `json:"build_name"`
+	BuildStage        string  `json:"build_stage"`
+	BuildStatus       string  `json:"build_status"`
+	BuildStartedAt    string  `json:"build_started_at"`
+	BuildFinishedAt   string  `json:"build_finished_at"`
+	BuildDuration     float64 `json:"build_duration"`
+	BuildAllowFailure bool    `json:"build_allow_failure"`
+	ProjectID         int     `json:"project_id"`
+	ProjectName       string  `json:"project_name"`
 	User              struct {
 		ID    int    `json:"id"`
 		Name  string `json:"name"`

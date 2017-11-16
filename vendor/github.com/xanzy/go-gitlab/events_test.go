@@ -25,7 +25,7 @@ func TestPushEventUnmarshal(t *testing.T) {
     "git_ssh_url":"git@example.com:mike/diaspora.git",
     "git_http_url":"http://example.com/mike/diaspora.git",
     "namespace":"Mike",
-    "visibility_level":0,
+    "visibility":"public",
     "path_with_namespace":"mike/diaspora",
     "default_branch":"master",
     "homepage":"http://example.com/mike/diaspora",
@@ -40,7 +40,7 @@ func TestPushEventUnmarshal(t *testing.T) {
     "homepage": "http://example.com/mike/diaspora",
     "git_http_url":"http://example.com/mike/diaspora.git",
     "git_ssh_url":"git@example.com:mike/diaspora.git",
-    "visibility_level":0
+    "visibility":"public"
   },
   "commits": [
     {
@@ -124,7 +124,7 @@ func TestMergeEventUnmarshal(t *testing.T) {
       "git_ssh_url":"git@example.com:awesome_space/awesome_project.git",
       "git_http_url":"http://example.com/awesome_space/awesome_project.git",
       "namespace":"Awesome Space",
-      "visibility_level":20,
+      "visibility":"private",
       "path_with_namespace":"awesome_space/awesome_project",
       "default_branch":"master",
       "homepage":"http://example.com/awesome_space/awesome_project",
@@ -140,7 +140,7 @@ func TestMergeEventUnmarshal(t *testing.T) {
       "git_ssh_url":"git@example.com:awesome_space/awesome_project.git",
       "git_http_url":"http://example.com/awesome_space/awesome_project.git",
       "namespace":"Awesome Space",
-      "visibility_level":20,
+      "visibility":"private",
       "path_with_namespace":"awesome_space/awesome_project",
       "default_branch":"master",
       "homepage":"http://example.com/awesome_space/awesome_project",
@@ -233,7 +233,7 @@ func TestPipelineEventUnmarshal(t *testing.T) {
       "git_ssh_url": "git@192.168.64.1:gitlab-org/gitlab-test.git",
       "git_http_url": "http://192.168.64.1:3005/gitlab-org/gitlab-test.git",
       "namespace": "Gitlab Org",
-      "visibility_level": 20,
+      "visibility": "private",
       "path_with_namespace": "gitlab-org/gitlab-test",
       "default_branch": "master"
    },
@@ -284,10 +284,15 @@ func TestPipelineEventUnmarshal(t *testing.T) {
             "username": "root",
             "avatar_url": "http://www.gravatar.com/avatar/e32bd13e2add097461cb96824b7a829c?s=80\u0026d=identicon"
          },
-         "runner": null,
+         "runner": {
+            "id": 6,
+            "description": "Kubernetes Runner",
+            "active": true,
+            "is_shared": true
+         },
          "artifacts_file":{
-            "filename": null,
-            "size": null
+            "filename": "artifacts.zip",
+            "size": 1319148
          }
       },
       {
@@ -386,7 +391,7 @@ func TestBuildEventUnmarshal(t *testing.T) {
   "build_status": "created",
   "build_started_at": null,
   "build_finished_at": null,
-  "build_duration": null,
+  "build_duration": 23.265997,
   "build_allow_failure": false,
   "project_id": 380,
   "project_name": "gitlab-org/gitlab-test",
@@ -413,7 +418,7 @@ func TestBuildEventUnmarshal(t *testing.T) {
     "homepage": "http://192.168.64.1:3005/gitlab-org/gitlab-test",
     "git_ssh_url": "git@192.168.64.1:gitlab-org/gitlab-test.git",
     "git_http_url": "http://192.168.64.1:3005/gitlab-org/gitlab-test.git",
-    "visibility_level": 20
+    "visibility": "private"
   }
 }`
 	var event *BuildEvent
@@ -449,7 +454,7 @@ func TestMergeEventUnmarshalFromGroup(t *testing.T) {
 		"git_ssh_url": "git@example.com:exm-namespace/example-project.git",
 		"git_http_url": "http://example.com/exm-namespace/example-project.git",
 		"namespace": "exm-namespace",
-		"visibility_level": 0,
+		"visibility": "public",
 		"path_with_namespace": "exm-namespace/example-project",
 		"default_branch": "master",
 		"homepage": "http://example.com/exm-namespace/example-project",
@@ -497,7 +502,7 @@ func TestMergeEventUnmarshalFromGroup(t *testing.T) {
 			"git_ssh_url": "git@example.com:exm-namespace/example-project.git",
 			"git_http_url": "http://example.com/exm-namespace/example-project.git",
 			"namespace": "exm-namespace",
-			"visibility_level": 0,
+			"visibility": "public",
 			"path_with_namespace": "exm-namespace/example-project",
 			"default_branch": "master",
 			"homepage": "http://example.com/exm-namespace/example-project",
@@ -513,7 +518,7 @@ func TestMergeEventUnmarshalFromGroup(t *testing.T) {
 			"git_ssh_url": "git@example.com:exm-namespace/example-project.git",
 			"git_http_url": "http://example.com/exm-namespace/example-project.git",
 			"namespace": "exm-namespace",
-			"visibility_level": 0,
+			"visibility": "public",
 			"path_with_namespace": "exm-namespace/example-project",
 			"default_branch": "master",
 			"homepage": "http://example.com/exm-namespace/example-project",

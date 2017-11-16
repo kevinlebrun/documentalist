@@ -1,5 +1,5 @@
 //
-// Copyright 2015, Sander van Harmelen
+// Copyright 2017, Sander van Harmelen
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -118,21 +118,21 @@ func (s *UsersService) GetUser(user int, options ...OptionFunc) (*User, *Respons
 //
 // GitLab API docs: https://docs.gitlab.com/ce/api/users.html#user-creation
 type CreateUserOptions struct {
-	Email          *string `url:"email,omitempty" json:"email,omitempty"`
-	Password       *string `url:"password,omitempty" json:"password,omitempty"`
-	Username       *string `url:"username,omitempty" json:"username,omitempty"`
-	Name           *string `url:"name,omitempty" json:"name,omitempty"`
-	Skype          *string `url:"skype,omitempty" json:"skype,omitempty"`
-	Linkedin       *string `url:"linkedin,omitempty" json:"linkedin,omitempty"`
-	Twitter        *string `url:"twitter,omitempty" json:"twitter,omitempty"`
-	WebsiteURL     *string `url:"website_url,omitempty" json:"website_url,omitempty"`
-	ProjectsLimit  *int    `url:"projects_limit,omitempty" json:"projects_limit,omitempty"`
-	ExternUID      *string `url:"extern_uid,omitempty" json:"extern_uid,omitempty"`
-	Provider       *string `url:"provider,omitempty" json:"provider,omitempty"`
-	Bio            *string `url:"bio,omitempty" json:"bio,omitempty"`
-	Admin          *bool   `url:"admin,omitempty" json:"admin,omitempty"`
-	CanCreateGroup *bool   `url:"can_create_group,omitempty" json:"can_create_group,omitempty"`
-	Confirm        *bool   `url:"confirm,omitempty" json:"confirm,omitempty"`
+	Email            *string `url:"email,omitempty" json:"email,omitempty"`
+	Password         *string `url:"password,omitempty" json:"password,omitempty"`
+	Username         *string `url:"username,omitempty" json:"username,omitempty"`
+	Name             *string `url:"name,omitempty" json:"name,omitempty"`
+	Skype            *string `url:"skype,omitempty" json:"skype,omitempty"`
+	Linkedin         *string `url:"linkedin,omitempty" json:"linkedin,omitempty"`
+	Twitter          *string `url:"twitter,omitempty" json:"twitter,omitempty"`
+	WebsiteURL       *string `url:"website_url,omitempty" json:"website_url,omitempty"`
+	ProjectsLimit    *int    `url:"projects_limit,omitempty" json:"projects_limit,omitempty"`
+	ExternUID        *string `url:"extern_uid,omitempty" json:"extern_uid,omitempty"`
+	Provider         *string `url:"provider,omitempty" json:"provider,omitempty"`
+	Bio              *string `url:"bio,omitempty" json:"bio,omitempty"`
+	Admin            *bool   `url:"admin,omitempty" json:"admin,omitempty"`
+	CanCreateGroup   *bool   `url:"can_create_group,omitempty" json:"can_create_group,omitempty"`
+	SkipConfirmation *bool   `url:"skip_confirmation,omitempty" json:"skip_confirmation,omitempty"`
 }
 
 // CreateUser creates a new user. Note only administrators can create new users.
@@ -283,8 +283,8 @@ func (s *UsersService) ListSSHKeysForUser(user int, options ...OptionFunc) ([]*S
 // GetSSHKey gets a single key.
 //
 // GitLab API docs: https://docs.gitlab.com/ce/api/users.html#single-ssh-key
-func (s *UsersService) GetSSHKey(kid int, options ...OptionFunc) (*SSHKey, *Response, error) {
-	u := fmt.Sprintf("user/keys/%d", kid)
+func (s *UsersService) GetSSHKey(key int, options ...OptionFunc) (*SSHKey, *Response, error) {
+	u := fmt.Sprintf("user/keys/%d", key)
 
 	req, err := s.client.NewRequest("GET", u, nil, options)
 	if err != nil {
@@ -353,8 +353,8 @@ func (s *UsersService) AddSSHKeyForUser(user int, opt *AddSSHKeyOptions, options
 //
 // GitLab API docs:
 // https://docs.gitlab.com/ce/api/users.html#delete-ssh-key-for-current-owner
-func (s *UsersService) DeleteSSHKey(kid int, options ...OptionFunc) (*Response, error) {
-	u := fmt.Sprintf("user/keys/%d", kid)
+func (s *UsersService) DeleteSSHKey(key int, options ...OptionFunc) (*Response, error) {
+	u := fmt.Sprintf("user/keys/%d", key)
 
 	req, err := s.client.NewRequest("DELETE", u, nil, options)
 	if err != nil {
@@ -369,8 +369,8 @@ func (s *UsersService) DeleteSSHKey(kid int, options ...OptionFunc) (*Response, 
 //
 // GitLab API docs:
 // https://docs.gitlab.com/ce/api/users.html#delete-ssh-key-for-given-user
-func (s *UsersService) DeleteSSHKeyForUser(user int, kid int, options ...OptionFunc) (*Response, error) {
-	u := fmt.Sprintf("users/%d/keys/%d", user, kid)
+func (s *UsersService) DeleteSSHKeyForUser(user, key int, options ...OptionFunc) (*Response, error) {
+	u := fmt.Sprintf("users/%d/keys/%d", user, key)
 
 	req, err := s.client.NewRequest("DELETE", u, nil, options)
 	if err != nil {
@@ -386,7 +386,7 @@ func (s *UsersService) DeleteSSHKeyForUser(user int, kid int, options ...OptionF
 func (s *UsersService) BlockUser(user int, options ...OptionFunc) error {
 	u := fmt.Sprintf("users/%d/block", user)
 
-	req, err := s.client.NewRequest("PUT", u, nil, options)
+	req, err := s.client.NewRequest("POST", u, nil, options)
 	if err != nil {
 		return err
 	}
@@ -402,7 +402,7 @@ func (s *UsersService) BlockUser(user int, options ...OptionFunc) error {
 	case 403:
 		return errors.New("Cannot block a user that is already blocked by LDAP synchronization")
 	case 404:
-		return errors.New("User does not exists")
+		return errors.New("User does not exist")
 	default:
 		return fmt.Errorf("Received unexpected result code: %d", resp.StatusCode)
 	}
@@ -414,7 +414,7 @@ func (s *UsersService) BlockUser(user int, options ...OptionFunc) error {
 func (s *UsersService) UnblockUser(user int, options ...OptionFunc) error {
 	u := fmt.Sprintf("users/%d/unblock", user)
 
-	req, err := s.client.NewRequest("PUT", u, nil, options)
+	req, err := s.client.NewRequest("POST", u, nil, options)
 	if err != nil {
 		return err
 	}
@@ -430,7 +430,7 @@ func (s *UsersService) UnblockUser(user int, options ...OptionFunc) error {
 	case 403:
 		return errors.New("Cannot unblock a user that is blocked by LDAP synchronization")
 	case 404:
-		return errors.New("User does not exists")
+		return errors.New("User does not exist")
 	default:
 		return fmt.Errorf("Received unexpected result code: %d", resp.StatusCode)
 	}
@@ -467,8 +467,8 @@ func (s *UsersService) ListEmails(options ...OptionFunc) ([]*Email, *Response, e
 //
 // GitLab API docs:
 // https://docs.gitlab.com/ce/api/users.html#list-emails-for-user
-func (s *UsersService) ListEmailsForUser(uid int, options ...OptionFunc) ([]*Email, *Response, error) {
-	u := fmt.Sprintf("users/%d/emails", uid)
+func (s *UsersService) ListEmailsForUser(user int, options ...OptionFunc) ([]*Email, *Response, error) {
+	u := fmt.Sprintf("users/%d/emails", user)
 
 	req, err := s.client.NewRequest("GET", u, nil, options)
 	if err != nil {
@@ -487,8 +487,8 @@ func (s *UsersService) ListEmailsForUser(uid int, options ...OptionFunc) ([]*Ema
 // GetEmail gets a single email.
 //
 // GitLab API docs: https://docs.gitlab.com/ce/api/users.html#single-email
-func (s *UsersService) GetEmail(eid int, options ...OptionFunc) (*Email, *Response, error) {
-	u := fmt.Sprintf("user/emails/%d", eid)
+func (s *UsersService) GetEmail(email int, options ...OptionFunc) (*Email, *Response, error) {
+	u := fmt.Sprintf("user/emails/%d", email)
 
 	req, err := s.client.NewRequest("GET", u, nil, options)
 	if err != nil {
@@ -533,8 +533,8 @@ func (s *UsersService) AddEmail(opt *AddEmailOptions, options ...OptionFunc) (*E
 // admin.
 //
 // GitLab API docs: https://docs.gitlab.com/ce/api/users.html#add-email-for-user
-func (s *UsersService) AddEmailForUser(uid int, opt *AddEmailOptions, options ...OptionFunc) (*Email, *Response, error) {
-	u := fmt.Sprintf("users/%d/emails", uid)
+func (s *UsersService) AddEmailForUser(user int, opt *AddEmailOptions, options ...OptionFunc) (*Email, *Response, error) {
+	u := fmt.Sprintf("users/%d/emails", user)
 
 	req, err := s.client.NewRequest("POST", u, opt, options)
 	if err != nil {
@@ -556,8 +556,8 @@ func (s *UsersService) AddEmailForUser(uid int, opt *AddEmailOptions, options ..
 //
 // GitLab API docs:
 // https://docs.gitlab.com/ce/api/users.html#delete-email-for-current-owner
-func (s *UsersService) DeleteEmail(eid int, options ...OptionFunc) (*Response, error) {
-	u := fmt.Sprintf("user/emails/%d", eid)
+func (s *UsersService) DeleteEmail(email int, options ...OptionFunc) (*Response, error) {
+	u := fmt.Sprintf("user/emails/%d", email)
 
 	req, err := s.client.NewRequest("DELETE", u, nil, options)
 	if err != nil {
@@ -572,8 +572,121 @@ func (s *UsersService) DeleteEmail(eid int, options ...OptionFunc) (*Response, e
 //
 // GitLab API docs:
 // https://docs.gitlab.com/ce/api/users.html#delete-email-for-given-user
-func (s *UsersService) DeleteEmailForUser(uid int, eid int, options ...OptionFunc) (*Response, error) {
-	u := fmt.Sprintf("users/%d/emails/%d", uid, eid)
+func (s *UsersService) DeleteEmailForUser(user, email int, options ...OptionFunc) (*Response, error) {
+	u := fmt.Sprintf("users/%d/emails/%d", user, email)
+
+	req, err := s.client.NewRequest("DELETE", u, nil, options)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.client.Do(req, nil)
+}
+
+// ImpersonationToken represents an impersonation token.
+//
+// GitLab API docs:
+// https://docs.gitlab.com/ce/api/users.html#get-all-impersonation-tokens-of-a-user
+type ImpersonationToken struct {
+	ID        int        `json:"id"`
+	Name      string     `json:"name"`
+	Active    bool       `json:"active"`
+	Token     string     `json:"token"`
+	Scopes    []string   `json:"scopes"`
+	Revoked   bool       `json:"revoked"`
+	CreatedAt *time.Time `json:"created_at"`
+	ExpiresAt *time.Time `json:"expires_at"`
+}
+
+// GetAllImpersonationTokensOptions represents the available
+// GetAllImpersonationTokens() options.
+//
+// GitLab API docs:
+// https://docs.gitlab.com/ce/api/users.html#get-all-impersonation-tokens-of-a-user
+type GetAllImpersonationTokensOptions struct {
+	State *string `url:"state,omitempty" json:"state,omitempty"`
+}
+
+// GetAllImpersonationTokens retrieves all impersonation tokens of a user.
+//
+// GitLab API docs:
+// https://docs.gitlab.com/ce/api/users.html#get-all-impersonation-tokens-of-a-user
+func (s *UsersService) GetAllImpersonationTokens(user int, opt *GetAllImpersonationTokensOptions, options ...OptionFunc) ([]*ImpersonationToken, *Response, error) {
+	u := fmt.Sprintf("users/%d/impersonation_tokens", user)
+
+	req, err := s.client.NewRequest("GET", u, opt, options)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var ts []*ImpersonationToken
+	resp, err := s.client.Do(req, &ts)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	return ts, resp, err
+}
+
+// GetImpersonationToken retrieves an impersonation token of a user.
+//
+// GitLab API docs:
+// https://docs.gitlab.com/ce/api/users.html#get-an-impersonation-token-of-a-user
+func (s *UsersService) GetImpersonationToken(user, token int, options ...OptionFunc) (*ImpersonationToken, *Response, error) {
+	u := fmt.Sprintf("users/%d/impersonation_tokens/%d", user, token)
+
+	req, err := s.client.NewRequest("GET", u, nil, options)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	t := new(ImpersonationToken)
+	resp, err := s.client.Do(req, &t)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	return t, resp, err
+}
+
+// CreateImpersonationTokenOptions represents the available
+// CreateImpersonationToken() options.
+//
+// GitLab API docs:
+// https://docs.gitlab.com/ce/api/users.html#create-an-impersonation-token
+type CreateImpersonationTokenOptions struct {
+	Name      *string    `url:"name,omitempty" json:"name,omitempty"`
+	Scopes    *[]string  `url:"scopes,omitempty" json:"scopes,omitempty"`
+	ExpiresAt *time.Time `url:"expires_at,omitempty" json:"expires_at,omitempty"`
+}
+
+// CreateImpersonationToken creates an impersonation token.
+//
+// GitLab API docs:
+// https://docs.gitlab.com/ce/api/users.html#create-an-impersonation-token
+func (s *UsersService) CreateImpersonationToken(user int, opt *CreateImpersonationTokenOptions, options ...OptionFunc) (*ImpersonationToken, *Response, error) {
+	u := fmt.Sprintf("users/%d/impersonation_tokens", user)
+
+	req, err := s.client.NewRequest("POST", u, opt, options)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	t := new(ImpersonationToken)
+	resp, err := s.client.Do(req, &t)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	return t, resp, err
+}
+
+// RevokeImpersonationToken revokes an impersonation token.
+//
+// GitLab API docs:
+// https://docs.gitlab.com/ce/api/users.html#revoke-an-impersonation-token
+func (s *UsersService) RevokeImpersonationToken(user, token int, options ...OptionFunc) (*Response, error) {
+	u := fmt.Sprintf("users/%d/impersonation_tokens/%d", user, token)
 
 	req, err := s.client.NewRequest("DELETE", u, nil, options)
 	if err != nil {

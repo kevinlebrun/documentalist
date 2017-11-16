@@ -1,5 +1,5 @@
 //
-// Copyright 2015, Sander van Harmelen
+// Copyright 2017, Sander van Harmelen
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,7 +29,8 @@ import (
 //
 // GitLab API docs: https://docs.gitlab.com/ce/api/issues.html
 type IssuesService struct {
-	client *Client
+	client    *Client
+	timeStats *timeStatsService
 }
 
 // Issue represents a GitLab issue.
@@ -86,10 +87,17 @@ func (l *Labels) MarshalJSON() ([]byte, error) {
 // GitLab API docs: https://docs.gitlab.com/ce/api/issues.html#list-issues
 type ListIssuesOptions struct {
 	ListOptions
-	State   *string `url:"state,omitempty" json:"state,omitempty"`
-	Labels  Labels  `url:"labels,comma,omitempty" json:"labels,omitempty"`
-	OrderBy *string `url:"order_by,omitempty" json:"order_by,omitempty"`
-	Sort    *string `url:"sort,omitempty" json:"sort,omitempty"`
+	State           *string `url:"state,omitempty" json:"state,omitempty"`
+	Labels          Labels  `url:"labels,comma,omitempty" json:"labels,omitempty"`
+	Milestone       *string `url:"milestone,omitempty" json:"milestone,omitempty"`
+	Scope           *string `url:"scope,omitempty" json:"scope,omitempty"`
+	AuthorID        *int    `url:"author_id,omitempty" json:"author_id,omitempty"`
+	AssigneeID      *int    `url:"assignee_id,omitempty" json:"assignee_id,omitempty"`
+	MyReactionEmoji *string `url:"my_reaction_emoji,omitempty" json:"my_reaction_emoji,omitempty"`
+	IIDs            []int   `url:"iids[],omitempty" json:"iids,omitempty"`
+	OrderBy         *string `url:"order_by,omitempty" json:"order_by,omitempty"`
+	Sort            *string `url:"sort,omitempty" json:"sort,omitempty"`
+	Search          *string `url:"search,omitempty" json:"search,omitempty"`
 }
 
 // ListIssues gets all issues created by authenticated user. This function
@@ -111,17 +119,67 @@ func (s *IssuesService) ListIssues(opt *ListIssuesOptions, options ...OptionFunc
 	return i, resp, err
 }
 
+// ListGroupIssuesOptions represents the available ListGroupIssues() options.
+//
+// GitLab API docs: https://docs.gitlab.com/ce/api/issues.html#list-group-issues
+type ListGroupIssuesOptions struct {
+	ListOptions
+	State           *string `url:"state,omitempty" json:"state,omitempty"`
+	Labels          Labels  `url:"labels,comma,omitempty" json:"labels,omitempty"`
+	IIDs            []int   `url:"iids[],omitempty" json:"iids,omitempty"`
+	Milestone       *string `url:"milestone,omitempty" json:"milestone,omitempty"`
+	Scope           *string `url:"scope,omitempty" json:"scope,omitempty"`
+	AuthorID        *int    `url:"author_id,omitempty" json:"author_id,omitempty"`
+	AssigneeID      *int    `url:"assignee_id,omitempty" json:"assignee_id,omitempty"`
+	MyReactionEmoji *string `url:"my_reaction_emoji,omitempty" json:"my_reaction_emoji,omitempty"`
+	OrderBy         *string `url:"order_by,omitempty" json:"order_by,omitempty"`
+	Sort            *string `url:"sort,omitempty" json:"sort,omitempty"`
+	Search          *string `url:"search,omitempty" json:"search,omitempty"`
+}
+
+// ListGroupIssues gets a list of group issues. This function accepts
+// pagination parameters page and per_page to return the list of group issues.
+//
+// GitLab API docs: https://docs.gitlab.com/ce/api/issues.html#list-group-issues
+func (s *IssuesService) ListGroupIssues(pid interface{}, opt *ListGroupIssuesOptions, options ...OptionFunc) ([]*Issue, *Response, error) {
+	group, err := parseID(pid)
+	if err != nil {
+		return nil, nil, err
+	}
+	u := fmt.Sprintf("groups/%s/issues", url.QueryEscape(group))
+
+	req, err := s.client.NewRequest("GET", u, opt, options)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var i []*Issue
+	resp, err := s.client.Do(req, &i)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	return i, resp, err
+}
+
 // ListProjectIssuesOptions represents the available ListProjectIssues() options.
 //
-// GitLab API docs: https://docs.gitlab.com/ce/api/issues.html#list-issues
+// GitLab API docs: https://docs.gitlab.com/ce/api/issues.html#list-project-issues
 type ListProjectIssuesOptions struct {
 	ListOptions
-	IID       *int    `url:"iid,omitempty" json:"iid,omitempty"`
-	State     *string `url:"state,omitempty" json:"state,omitempty"`
-	Labels    Labels  `url:"labels,comma,omitempty" json:"labels,omitempty"`
-	Milestone *string `url:"milestone,omitempty" json:"milestone,omitempty"`
-	OrderBy   *string `url:"order_by,omitempty" json:"order_by,omitempty"`
-	Sort      *string `url:"sort,omitempty" json:"sort,omitempty"`
+	IIDs            []int      `url:"iids[],omitempty" json:"iids,omitempty"`
+	State           *string    `url:"state,omitempty" json:"state,omitempty"`
+	Labels          Labels     `url:"labels,comma,omitempty" json:"labels,omitempty"`
+	Milestone       *string    `url:"milestone,omitempty" json:"milestone,omitempty"`
+	Scope           *string    `url:"scope,omitempty" json:"scope,omitempty"`
+	AuthorID        *int       `url:"author_id,omitempty" json:"author_id,omitempty"`
+	AssigneeID      *int       `url:"assignee_id,omitempty" json:"assignee_id,omitempty"`
+	MyReactionEmoji *string    `url:"my_reaction_emoji,omitempty" json:"my_reaction_emoji,omitempty"`
+	OrderBy         *string    `url:"order_by,omitempty" json:"order_by,omitempty"`
+	Sort            *string    `url:"sort,omitempty" json:"sort,omitempty"`
+	Search          *string    `url:"search,omitempty" json:"search,omitempty"`
+	CreatedAfter    *time.Time `url:"created_after,omitempty" json:"created_after,omitempty"`
+	CreatedBefore   *time.Time `url:"created_before,omitempty" json:"created_before,omitempty"`
 }
 
 // ListProjectIssues gets a list of project issues. This function accepts
@@ -261,4 +319,44 @@ func (s *IssuesService) DeleteIssue(pid interface{}, issue int, options ...Optio
 	}
 
 	return s.client.Do(req, nil)
+}
+
+// SetTimeEstimate sets the time estimate for a single project issue.
+//
+// GitLab API docs:
+// https://docs.gitlab.com/ce/api/issues.html#set-a-time-estimate-for-an-issue
+func (s *IssuesService) SetTimeEstimate(pid interface{}, issue int, opt *SetTimeEstimateOptions, options ...OptionFunc) (*TimeStats, *Response, error) {
+	return s.timeStats.setTimeEstimate(pid, "issues", issue, opt, options...)
+}
+
+// ResetTimeEstimate resets the time estimate for a single project issue.
+//
+// GitLab API docs:
+// https://docs.gitlab.com/ce/api/issues.html#reset-the-time-estimate-for-an-issue
+func (s *IssuesService) ResetTimeEstimate(pid interface{}, issue int, options ...OptionFunc) (*TimeStats, *Response, error) {
+	return s.timeStats.resetTimeEstimate(pid, "issues", issue, options...)
+}
+
+// AddSpentTime adds spent time for a single project issue.
+//
+// GitLab API docs:
+// https://docs.gitlab.com/ce/api/issues.html#add-spent-time-for-an-issue
+func (s *IssuesService) AddSpentTime(pid interface{}, issue int, opt *AddSpentTimeOptions, options ...OptionFunc) (*TimeStats, *Response, error) {
+	return s.timeStats.addSpentTime(pid, "issues", issue, opt, options...)
+}
+
+// ResetSpentTime resets the spent time for a single project issue.
+//
+// GitLab API docs:
+// https://docs.gitlab.com/ce/api/issues.html#reset-spent-time-for-an-issue
+func (s *IssuesService) ResetSpentTime(pid interface{}, issue int, options ...OptionFunc) (*TimeStats, *Response, error) {
+	return s.timeStats.resetSpentTime(pid, "issues", issue, options...)
+}
+
+// GetTimeSpent gets the spent time for a single project issue.
+//
+// GitLab API docs:
+// https://docs.gitlab.com/ce/api/issues.html#get-time-tracking-stats
+func (s *IssuesService) GetTimeSpent(pid interface{}, issue int, options ...OptionFunc) (*TimeStats, *Response, error) {
+	return s.timeStats.getTimeSpent(pid, "issues", issue, options...)
 }

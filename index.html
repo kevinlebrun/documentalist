@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>{{.Title}} - Project List</title>
+
+        <meta charset="utf-8"/>
+
+        <link rel="stylesheet" type="text/css" href="./styles.css"/>
+    </head>
+    <body>
+
+        <div class="gradient"></div>
+
+        <div class="container">
+            <div class="container__header">
+                <input class="project-search-box" type="text" />
+                <h1>{{.Title}}</h1>
+            </div>
+
+            <p>{{.SubTitle}}</p>
+
+            <div class="project-list">
+
+                {{range .ProjectEntries}}
+                <div class="project js-collapsable">
+                    <div class="project__header js-collapse">
+                        <h2>{{.Name}}</h2>
+                        <i class="icon icon__collapse"></i>
+                    </div>
+
+                    <div class="project__detail">
+                        <p class="project__description">{{.Description}}
+                            <a href="{{.GitlabLink}}">voir le projet</a>.
+                        </p>
+
+                        <ul class="project__documentation">
+                            {{range .Refs}}
+                            <li>
+                                <span class="documentation__label">{{.Name}}</span>
+                                <span class="documentation__action">
+                                    <a class="cta cta--green" href="{{.DocumentalistLink}}">doc</a>
+                                    <a class="cta cta--blue" href="{{.GitlabLink}}">code</a>
+                                </span>
+                            </li>
+                            {{end}}
+                            <li class="sublist">Merge Requests
+                                <ul>
+                                    {{range .MergeRequests}}
+                                    <li>
+                                        <span class="documentation__label">{{.Name}}</span>
+                                        <span class="documentation__action">
+                                            <a class="cta cta--green" href="{{.DocumentalistLink}}">doc</a>
+                                            <a class="cta cta--blue" href="{{.GitlabLink}}">code</a>
+                                        </span>
+                                    </li>
+                                    {{end}}
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                {{end}}
+
+            </div>
+        </div>
+
+        <script>
+            function closest(el, selector, stopSelector) {
+                var retval = null;
+                while (el) {
+                    if (el.matches(selector)) {
+                        retval = el;
+                        break
+                    } else if (stopSelector && el.matches(stopSelector)) {
+                        break
+                    }
+                    el = el.parentElement;
+                }
+                return retval;
+            }
+
+            var projectList = document.querySelector('.project-list');
+            projectList.addEventListener('click', function (e) {
+                var action = closest(e.target, '.js-collapse', '.project');
+                if (!action) {
+                    return;
+                }
+
+                var container = closest(action, '.js-collapsable', '.project');
+                if (!container) {
+                    return;
+                }
+
+                if (container.classList.contains('js-collapsed')) {
+                    console.log('étendu')
+                    var detail = container.querySelector('.project__detail').getBoundingClientRect().height;
+                    var header = container.querySelector('.project__header').getBoundingClientRect().height;
+                    container.style.maxHeight = (detail + header) + 'px';
+                } else {
+                    console.log('caché')
+                    container.style.maxHeight = '41px';
+                }
+
+                container.classList.toggle('js-collapsed');
+            });
+
+
+            var projects = projectList.querySelectorAll('.project');
+            var projectsMap = {};
+            for (var i in projects) {
+                if (projects.hasOwnProperty(i)) {
+                    console.log(projects[i])
+                    var name = projects[i].querySelector('h2').textContent;
+                    projectsMap[name] = projects[i];
+                }
+            }
+
+            // TODO handle more
+            var searchInput = document.querySelector('.project-search-box');
+            searchInput.addEventListener('keyup', function (e) {
+                if (e.target.value) {
+                    var re = new RegExp(e.target.value);
+                    for (var i in projectsMap) {
+                        if (i.match(re)) {
+                            projectsMap[i].style.display = 'block';
+                        } else {
+                            projectsMap[i].style.display = 'none';
+                        }
+                    }
+                } else {
+                    for (var i in projectsMap) {
+                        projectsMap[i].style.display = 'block';
+                    }
+                }
+            });
+        </script>
+    </body>
+</html>

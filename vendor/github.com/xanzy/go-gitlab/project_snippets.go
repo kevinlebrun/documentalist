@@ -1,5 +1,5 @@
 //
-// Copyright 2015, Sander van Harmelen
+// Copyright 2017, Sander van Harmelen
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -46,7 +46,6 @@ type Snippet struct {
 		State     string     `json:"state"`
 		CreatedAt *time.Time `json:"created_at"`
 	} `json:"author"`
-	ExpiresAt *time.Time `json:"expires_at"`
 	UpdatedAt *time.Time `json:"updated_at"`
 	CreatedAt *time.Time `json:"created_at"`
 }
@@ -116,10 +115,10 @@ func (s *ProjectSnippetsService) GetSnippet(pid interface{}, snippet int, option
 // GitLab API docs:
 // https://docs.gitlab.com/ce/api/project_snippets.html#create-new-snippet
 type CreateSnippetOptions struct {
-	Title           *string               `url:"title,omitempty" json:"title,omitempty"`
-	FileName        *string               `url:"file_name,omitempty" json:"file_name,omitempty"`
-	Code            *string               `url:"code,omitempty" json:"code,omitempty"`
-	VisibilityLevel *VisibilityLevelValue `url:"visibility_level,omitempty" json:"visibility_level,omitempty"`
+	Title      *string          `url:"title,omitempty" json:"title,omitempty"`
+	FileName   *string          `url:"file_name,omitempty" json:"file_name,omitempty"`
+	Code       *string          `url:"code,omitempty" json:"code,omitempty"`
+	Visibility *VisibilityValue `url:"visibility,omitempty" json:"visibility,omitempty"`
 }
 
 // CreateSnippet creates a new project snippet. The user must have permission
@@ -153,10 +152,10 @@ func (s *ProjectSnippetsService) CreateSnippet(pid interface{}, opt *CreateSnipp
 // GitLab API docs:
 // https://docs.gitlab.com/ce/api/project_snippets.html#update-snippet
 type UpdateSnippetOptions struct {
-	Title           *string               `url:"title,omitempty" json:"title,omitempty"`
-	FileName        *string               `url:"file_name,omitempty" json:"file_name,omitempty"`
-	Code            *string               `url:"code,omitempty" json:"code,omitempty"`
-	VisibilityLevel *VisibilityLevelValue `url:"visibility_level,omitempty" json:"visibility_level,omitempty"`
+	Title      *string          `url:"title,omitempty" json:"title,omitempty"`
+	FileName   *string          `url:"file_name,omitempty" json:"file_name,omitempty"`
+	Code       *string          `url:"code,omitempty" json:"code,omitempty"`
+	Visibility *VisibilityValue `url:"visibility,omitempty" json:"visibility,omitempty"`
 }
 
 // UpdateSnippet updates an existing project snippet. The user must have

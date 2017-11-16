@@ -1,5 +1,5 @@
 //
-// Copyright 2015, Sander van Harmelen
+// Copyright 2017, Sander van Harmelen
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -112,20 +112,45 @@ const (
 
 // CommitAction represents a single file action within a commit.
 type CommitAction struct {
-	Action       FileAction `url:"action" json:"action,omitempty"`
-	FilePath     string     `url:"file_path" json:"file_path,omitempty"`
+	Action       FileAction `url:"action" json:"action"`
+	FilePath     string     `url:"file_path" json:"file_path"`
 	PreviousPath string     `url:"previous_path,omitempty" json:"previous_path,omitempty"`
 	Content      string     `url:"content,omitempty" json:"content,omitempty"`
 	Encoding     string     `url:"encoding,omitempty" json:"encoding,omitempty"`
+}
+
+// GetCommit gets a specific commit identified by the commit hash or name of a
+// branch or tag.
+//
+// GitLab API docs: https://docs.gitlab.com/ce/api/commits.html#get-a-single-commit
+func (s *CommitsService) GetCommit(pid interface{}, sha string, options ...OptionFunc) (*Commit, *Response, error) {
+	project, err := parseID(pid)
+	if err != nil {
+		return nil, nil, err
+	}
+	u := fmt.Sprintf("projects/%s/repository/commits/%s", url.QueryEscape(project), sha)
+
+	req, err := s.client.NewRequest("GET", u, nil, options)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	c := new(Commit)
+	resp, err := s.client.Do(req, c)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	return c, resp, err
 }
 
 // CreateCommitOptions represents the available options for a new commit.
 //
 // GitLab API docs: https://docs.gitlab.com/ce/api/commits.html#create-a-commit-with-multiple-files-and-actions
 type CreateCommitOptions struct {
-	BranchName    *string         `url:"branch_name" json:"branch_name,omitempty"`
-	CommitMessage *string         `url:"commit_message" json:"commit_message,omitempty"`
-	Actions       []*CommitAction `url:"actions" json:"actions,omitempty"`
+	Branch        *string         `url:"branch" json:"branch"`
+	CommitMessage *string         `url:"commit_message" json:"commit_message"`
+	Actions       []*CommitAction `url:"actions" json:"actions"`
 	AuthorEmail   *string         `url:"author_email,omitempty" json:"author_email,omitempty"`
 	AuthorName    *string         `url:"author_name,omitempty" json:"author_name,omitempty"`
 }
@@ -147,31 +172,6 @@ func (s *CommitsService) CreateCommit(pid interface{}, opt *CreateCommitOptions,
 
 	var c *Commit
 	resp, err := s.client.Do(req, &c)
-	if err != nil {
-		return nil, resp, err
-	}
-
-	return c, resp, err
-}
-
-// GetCommit gets a specific commit identified by the commit hash or name of a
-// branch or tag.
-//
-// GitLab API docs: https://docs.gitlab.com/ce/api/commits.html#get-a-single-commit
-func (s *CommitsService) GetCommit(pid interface{}, sha string, options ...OptionFunc) (*Commit, *Response, error) {
-	project, err := parseID(pid)
-	if err != nil {
-		return nil, nil, err
-	}
-	u := fmt.Sprintf("projects/%s/repository/commits/%s", url.QueryEscape(project), sha)
-
-	req, err := s.client.NewRequest("GET", u, nil, options)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	c := new(Commit)
-	resp, err := s.client.Do(req, c)
 	if err != nil {
 		return nil, resp, err
 	}

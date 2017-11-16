@@ -1,5 +1,5 @@
 //
-// Copyright 2015, Sander van Harmelen
+// Copyright 2017, Sander van Harmelen
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,12 +34,16 @@ type TagsService struct {
 // GitLab API docs: https://docs.gitlab.com/ce/api/tags.html
 type Tag struct {
 	Commit  *Commit `json:"commit"`
-	Name    string  `json:"name"`
-	Message string  `json:"message"`
+	Release struct {
+		TagName     string `json:"tag_name"`
+		Description string `json:"description"`
+	} `json:"release"`
+	Name    string `json:"name"`
+	Message string `json:"message"`
 }
 
-func (r Tag) String() string {
-	return Stringify(r)
+func (t Tag) String() string {
+	return Stringify(t)
 }
 
 // ListTags gets a list of tags from a project, sorted by name in reverse
@@ -99,9 +103,10 @@ func (s *TagsService) GetTag(pid interface{}, tag string, options ...OptionFunc)
 // GitLab API docs:
 // https://docs.gitlab.com/ce/api/tags.html#create-a-new-tag
 type CreateTagOptions struct {
-	TagName *string `url:"tag_name,omitempty" json:"tag_name,omitempty"`
-	Ref     *string `url:"ref,omitempty" json:"ref,omitempty"`
-	Message *string `url:"message,omitempty" json:"message,omitempty"`
+	TagName            *string `url:"tag_name,omitempty" json:"tag_name,omitempty"`
+	Ref                *string `url:"ref,omitempty" json:"ref,omitempty"`
+	Message            *string `url:"message,omitempty" json:"message,omitempty"`
+	ReleaseDescription *string `url:"release_description:omitempty" json:"release_description,omitempty"`
 }
 
 // CreateTag creates a new tag in the repository that points to the supplied ref.

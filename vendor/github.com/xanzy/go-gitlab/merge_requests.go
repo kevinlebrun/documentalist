@@ -1,5 +1,5 @@
 //
-// Copyright 2015, Sander van Harmelen
+// Copyright 2017, Sander van Harmelen
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,26 +27,27 @@ import (
 //
 // GitLab API docs: https://docs.gitlab.com/ce/api/merge_requests.html
 type MergeRequestsService struct {
-	client *Client
+	client    *Client
+	timeStats *timeStatsService
 }
 
 // MergeRequest represents a GitLab merge request.
 //
 // GitLab API docs: https://docs.gitlab.com/ce/api/merge_requests.html
 type MergeRequest struct {
-	ID             int        `json:"id"`
-	IID            int        `json:"iid"`
-	ProjectID      int        `json:"project_id"`
-	Title          string     `json:"title"`
-	Description    string     `json:"description"`
-	WorkInProgress bool       `json:"work_in_progress"`
-	State          string     `json:"state"`
-	CreatedAt      *time.Time `json:"created_at"`
-	UpdatedAt      *time.Time `json:"updated_at"`
-	TargetBranch   string     `json:"target_branch"`
-	SourceBranch   string     `json:"source_branch"`
-	Upvotes        int        `json:"upvotes"`
-	Downvotes      int        `json:"downvotes"`
+	ID             int    `json:"id"`
+	IID            int    `json:"iid"`
+	ProjectID      int    `json:"project_id"`
+	Title          string `json:"title"`
+	Description    string `json:"description"`
+	WorkInProgress bool   `json:"work_in_progress"`
+	State          string `json:"state"`
+	CreatedAt      string `json:"created_at"`
+	UpdatedAt      string `json:"updated_at"`
+	TargetBranch   string `json:"target_branch"`
+	SourceBranch   string `json:"source_branch"`
+	Upvotes        int    `json:"upvotes"`
+	Downvotes      int    `json:"downvotes"`
 	Author         struct {
 		Name      string `json:"name"`
 		Username  string `json:"username"`
@@ -75,13 +76,14 @@ type MergeRequest struct {
 		UpdatedAt   *time.Time `json:"updated_at"`
 		DueDate     string     `json:"due_date"`
 	} `json:"milestone"`
-	MergeWhenBuildSucceeds  bool   `json:"merge_when_build_succeeds"`
-	MergeStatus             string `json:"merge_status"`
-	Subscribed              bool   `json:"subscribed"`
-	UserNotesCount          int    `json:"user_notes_count"`
-	SouldRemoveSourceBranch bool   `json:"should_remove_source_branch"`
-	ForceRemoveSourceBranch bool   `json:"force_remove_source_branch"`
-	Changes                 []struct {
+	MergeWhenPipelineSucceeds bool   `json:"merge_when_pipeline_succeeds"`
+	MergeStatus               string `json:"merge_status"`
+	SHA                       string `json:"sha"`
+	Subscribed                bool   `json:"subscribed"`
+	UserNotesCount            int    `json:"user_notes_count"`
+	SouldRemoveSourceBranch   bool   `json:"should_remove_source_branch"`
+	ForceRemoveSourceBranch   bool   `json:"force_remove_source_branch"`
+	Changes                   []struct {
 		OldPath     string `json:"old_path"`
 		NewPath     string `json:"new_path"`
 		AMode       string `json:"a_mode"`
@@ -98,6 +100,37 @@ func (m MergeRequest) String() string {
 	return Stringify(m)
 }
 
+// MergeRequestApprovals represents GitLab merge request approvals.
+//
+// GitLab API docs:
+// https://docs.gitlab.com/ee/api/merge_requests.html#merge-request-approvals
+type MergeRequestApprovals struct {
+	ID                int        `json:"id"`
+	ProjectID         int        `json:"project_id"`
+	Title             string     `json:"title"`
+	Description       string     `json:"description"`
+	State             string     `json:"state"`
+	CreatedAt         *time.Time `json:"created_at"`
+	UpdatedAt         *time.Time `json:"updated_at"`
+	MergeStatus       string     `json:"merge_status"`
+	ApprovalsRequired int        `json:"approvals_required"`
+	ApprovalsMissing  int        `json:"approvals_missing"`
+	ApprovedBy        []struct {
+		User struct {
+			Name      string `json:"name"`
+			Username  string `json:"username"`
+			ID        int    `json:"id"`
+			State     string `json:"state"`
+			AvatarURL string `json:"avatar_url"`
+			WebURL    string `json:"web_url"`
+		} `json:"user"`
+	} `json:"approved_by"`
+}
+
+func (m MergeRequestApprovals) String() string {
+	return Stringify(m)
+}
+
 // ListMergeRequestsOptions represents the available ListMergeRequests()
 // options.
 //
@@ -105,20 +138,72 @@ func (m MergeRequest) String() string {
 // https://docs.gitlab.com/ce/api/merge_requests.html#list-merge-requests
 type ListMergeRequestsOptions struct {
 	ListOptions
-	IID     *int    `url:"iid,omitempty" json:"iid,omitempty"`
-	State   *string `url:"state,omitempty" json:"state,omitempty"`
-	OrderBy *string `url:"order_by,omitempty" json:"order_by,omitempty"`
-	Sort    *string `url:"sort,omitempty" json:"sort,omitempty"`
+	State           *string    `url:"state,omitempty" json:"state,omitempty"`
+	OrderBy         *string    `url:"order_by,omitempty" json:"order_by,omitempty"`
+	Sort            *string    `url:"sort,omitempty" json:"sort,omitempty"`
+	Milestone       *string    `url:"milestone,omitempty" json:"milestone,omitempty"`
+	View            *string    `url:"view,omitempty" json:"view,omitempty"`
+	Labels          Labels     `url:"labels,omitempty" json:"labels,omitempty"`
+	CreatedAfter    *time.Time `url:"created_after,omitempty" json:"created_after,omitempty"`
+	CreatedBefore   *time.Time `url:"created_before,omitempty" json:"created_before,omitempty"`
+	Scope           *string    `url:"scope,omitempty" json:"scope,omitempty"`
+	AuthorID        *int       `url:"author_id,omitempty" json:"author_id,omitempty"`
+	AssigneeID      *int       `url:"assignee_id,omitempty" json:"assignee_id,omitempty"`
+	MyReactionEmoji *string    `url:"my_reaction_emoji,omitempty" json:"my_reaction_emoji,omitempty"`
 }
 
-// ListMergeRequests gets all merge requests for this project. The state
+// ListMergeRequests gets all merge requests. The state
 // parameter can be used to get only merge requests with a given state (opened,
 // closed, or merged) or all of them (all). The pagination parameters page and
 // per_page can be used to restrict the list of merge requests.
 //
 // GitLab API docs:
 // https://docs.gitlab.com/ce/api/merge_requests.html#list-merge-requests
-func (s *MergeRequestsService) ListMergeRequests(pid interface{}, opt *ListMergeRequestsOptions, options ...OptionFunc) ([]*MergeRequest, *Response, error) {
+func (s *MergeRequestsService) ListMergeRequests(opt *ListMergeRequestsOptions, options ...OptionFunc) ([]*MergeRequest, *Response, error) {
+	req, err := s.client.NewRequest("GET", "merge_requests", opt, options)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var m []*MergeRequest
+	resp, err := s.client.Do(req, &m)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	return m, resp, err
+}
+
+// ListProjectMergeRequestsOptions represents the available ListMergeRequests()
+// options.
+//
+// GitLab API docs:
+// https://docs.gitlab.com/ce/api/merge_requests.html#list-project-merge-requests
+type ListProjectMergeRequestsOptions struct {
+	ListOptions
+	IIDs            []int      `url:"iids[],omitempty" json:"iids,omitempty"`
+	State           *string    `url:"state,omitempty" json:"state,omitempty"`
+	OrderBy         *string    `url:"order_by,omitempty" json:"order_by,omitempty"`
+	Sort            *string    `url:"sort,omitempty" json:"sort,omitempty"`
+	Milestone       *string    `url:"milestone,omitempty" json:"milestone,omitempty"`
+	View            *string    `url:"view,omitempty" json:"view,omitempty"`
+	Labels          Labels     `url:"labels,omitempty" json:"labels,omitempty"`
+	CreatedAfter    *time.Time `url:"created_after,omitempty" json:"created_after,omitempty"`
+	CreatedBefore   *time.Time `url:"created_before,omitempty" json:"created_before,omitempty"`
+	Scope           *string    `url:"scope,omitempty" json:"scope,omitempty"`
+	AuthorID        *int       `url:"author_id,omitempty" json:"author_id,omitempty"`
+	AssigneeID      *int       `url:"assignee_id,omitempty" json:"assignee_id,omitempty"`
+	MyReactionEmoji *string    `url:"my_reaction_emoji,omitempty" json:"my_reaction_emoji,omitempty"`
+}
+
+// ListProjectMergeRequests gets all merge requests for this project. The state
+// parameter can be used to get only merge requests with a given state (opened,
+// closed, or merged) or all of them (all). The pagination parameters page and
+// per_page can be used to restrict the list of merge requests.
+//
+// GitLab API docs:
+// https://docs.gitlab.com/ce/api/merge_requests.html#list-merge-requests
+func (s *MergeRequestsService) ListProjectMergeRequests(pid interface{}, opt *ListProjectMergeRequestsOptions, options ...OptionFunc) ([]*MergeRequest, *Response, error) {
 	project, err := parseID(pid)
 	if err != nil {
 		return nil, nil, err
@@ -162,6 +247,31 @@ func (s *MergeRequestsService) GetMergeRequest(pid interface{}, mergeRequest int
 	}
 
 	return m, resp, err
+}
+
+// GetMergeRequestApprovals gets information about a merge requests approvals
+//
+// GitLab API docs:
+// https://docs.gitlab.com/ee/api/merge_requests.html#merge-request-approvals
+func (s *MergeRequestsService) GetMergeRequestApprovals(pid interface{}, mergeRequest int, options ...OptionFunc) (*MergeRequestApprovals, *Response, error) {
+	project, err := parseID(pid)
+	if err != nil {
+		return nil, nil, err
+	}
+	u := fmt.Sprintf("projects/%s/merge_requests/%d/approvals", url.QueryEscape(project), mergeRequest)
+
+	req, err := s.client.NewRequest("GET", u, nil, options)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	a := new(MergeRequestApprovals)
+	resp, err := s.client.Do(req, a)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	return a, resp, err
 }
 
 // GetMergeRequestCommits gets a list of merge request commits.
@@ -223,8 +333,8 @@ func (s *MergeRequestsService) GetMergeRequestChanges(pid interface{}, mergeRequ
 type CreateMergeRequestOptions struct {
 	Title           *string `url:"title,omitempty" json:"title,omitempty"`
 	Description     *string `url:"description,omitempty" json:"description,omitempty"`
-	SourceBranch    *string `url:"source_branch,omitemtpy" json:"source_branch,omitemtpy"`
-	TargetBranch    *string `url:"target_branch,omitemtpy" json:"target_branch,omitemtpy"`
+	SourceBranch    *string `url:"source_branch,omitempty" json:"source_branch,omitempty"`
+	TargetBranch    *string `url:"target_branch,omitempty" json:"target_branch,omitempty"`
 	AssigneeID      *int    `url:"assignee_id,omitempty" json:"assignee_id,omitempty"`
 	TargetProjectID *int    `url:"target_project_id,omitempty" json:"target_project_id,omitempty"`
 }
@@ -262,8 +372,10 @@ func (s *MergeRequestsService) CreateMergeRequest(pid interface{}, opt *CreateMe
 type UpdateMergeRequestOptions struct {
 	Title        *string `url:"title,omitempty" json:"title,omitempty"`
 	Description  *string `url:"description,omitempty" json:"description,omitempty"`
-	TargetBranch *string `url:"target_branch,omitemtpy" json:"target_branch,omitemtpy"`
+	TargetBranch *string `url:"target_branch,omitempty" json:"target_branch,omitempty"`
 	AssigneeID   *int    `url:"assignee_id,omitempty" json:"assignee_id,omitempty"`
+	Labels       Labels  `url:"labels,comma,omitempty" json:"labels,omitempty"`
+	MilestoneID  *int    `url:"milestone_id,omitempty" json:"milestone_id,omitempty"`
 	StateEvent   *string `url:"state_event,omitempty" json:"state_event,omitempty"`
 }
 
@@ -298,10 +410,10 @@ func (s *MergeRequestsService) UpdateMergeRequest(pid interface{}, mergeRequest 
 // GitLab API docs:
 // https://docs.gitlab.com/ce/api/merge_requests.html#accept-mr
 type AcceptMergeRequestOptions struct {
-	MergeCommitMessage       *string `url:"merge_commit_message,omitempty" json:"merge_commit_message,omitempty"`
-	ShouldRemoveSourceBranch *bool   `url:"should_remove_source_branch,omitempty" json:"should_remove_source_branch,omitempty"`
-	MergeWhenBuildSucceeds   *bool   `url:"merge_when_build_succeeds,omitempty" json:"merge_when_build_succeeds,omitempty"`
-	Sha                      *string `url:"sha,omitempty" json:"sha,omitempty"`
+	MergeCommitMessage        *string `url:"merge_commit_message,omitempty" json:"merge_commit_message,omitempty"`
+	ShouldRemoveSourceBranch  *bool   `url:"should_remove_source_branch,omitempty" json:"should_remove_source_branch,omitempty"`
+	MergeWhenPipelineSucceeds *bool   `url:"merge_when_pipeline_succeeds,omitempty" json:"merge_when_pipeline_succeeds,omitempty"`
+	Sha                       *string `url:"sha,omitempty" json:"sha,omitempty"`
 }
 
 // AcceptMergeRequest merges changes submitted with MR using this API. If merge
@@ -330,4 +442,44 @@ func (s *MergeRequestsService) AcceptMergeRequest(pid interface{}, mergeRequest 
 	}
 
 	return m, resp, err
+}
+
+// SetTimeEstimate sets the time estimate for a single project merge request.
+//
+// GitLab API docs:
+// https://docs.gitlab.com/ce/api/merge_requests.html#set-a-time-estimate-for-a-merge-request
+func (s *MergeRequestsService) SetTimeEstimate(pid interface{}, mergeRequest int, opt *SetTimeEstimateOptions, options ...OptionFunc) (*TimeStats, *Response, error) {
+	return s.timeStats.setTimeEstimate(pid, "merge_requests", mergeRequest, opt, options...)
+}
+
+// ResetTimeEstimate resets the time estimate for a single project merge request.
+//
+// GitLab API docs:
+// https://docs.gitlab.com/ce/api/merge_requests.html#reset-the-time-estimate-for-a-merge-request
+func (s *MergeRequestsService) ResetTimeEstimate(pid interface{}, mergeRequest int, options ...OptionFunc) (*TimeStats, *Response, error) {
+	return s.timeStats.resetTimeEstimate(pid, "merge_requests", mergeRequest, options...)
+}
+
+// AddSpentTime adds spent time for a single project merge request.
+//
+// GitLab API docs:
+// https://docs.gitlab.com/ce/api/merge_requests.html#add-spent-time-for-a-merge-request
+func (s *MergeRequestsService) AddSpentTime(pid interface{}, mergeRequest int, opt *AddSpentTimeOptions, options ...OptionFunc) (*TimeStats, *Response, error) {
+	return s.timeStats.addSpentTime(pid, "merge_requests", mergeRequest, opt, options...)
+}
+
+// ResetSpentTime resets the spent time for a single project merge request.
+//
+// GitLab API docs:
+// https://docs.gitlab.com/ce/api/merge_requests.html#reset-spent-time-for-a-merge-request
+func (s *MergeRequestsService) ResetSpentTime(pid interface{}, mergeRequest int, options ...OptionFunc) (*TimeStats, *Response, error) {
+	return s.timeStats.resetSpentTime(pid, "merge_requests", mergeRequest, options...)
+}
+
+// GetTimeSpent gets the spent time for a single project merge request.
+//
+// GitLab API docs:
+// https://docs.gitlab.com/ce/api/merge_requests.html#get-time-tracking-stats
+func (s *MergeRequestsService) GetTimeSpent(pid interface{}, mergeRequest int, options ...OptionFunc) (*TimeStats, *Response, error) {
+	return s.timeStats.getTimeSpent(pid, "merge_requests", mergeRequest, options...)
 }
